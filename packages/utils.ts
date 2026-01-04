@@ -42,9 +42,18 @@ export const createIdGenerator = ({
 export const generateId = createIdGenerator({})
 
 
-export const mergeObject = (target: any, source: any) => {
+export function mergeObject<T>(target: T, source: any): T {
   return {
     ...target,
     ...source,
+  } as T
+}
+
+
+export const logger = (key: string, data?: any) => {
+  console.group(`${key}`)
+  if (data) {
+    console.log(data)
   }
-} 
+  console.groupEnd()
+}

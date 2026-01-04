@@ -15,12 +15,34 @@
     <h1>xt-post CDN 测试</h1>
 
     <!-- 本地“模拟 CDN” -->
-    <script src="../lib/xt-post.min.js"></script>
-    <script>
-      const xtPost = new XtPost({
-        debug: true,
-        id: "child_1",
-      });
-    </script>
+
+    <button id="callParent">调用父方法</button>
+    <button id="sendEventToParent">发送事件给父方法</button>
   </body>
+
+  <script src="../lib/xt-post.min.js"></script>
+  <script>
+    const xtPost = new XtPost({
+      debug: true,
+      id: "children-1",
+      iframeId: "iframe-1",
+    });
+
+    document
+      .getElementById("callParent")
+      .addEventListener("click", async () => {
+        const parentTitle = await xtPost.call("getParentTitle");
+        console.log("父标题:", parentTitle);
+      });
+
+    document
+      .getElementById("sendEventToParent")
+      .addEventListener("click", async () => {
+        xtPost.emit("eventFromChild", "这是子元素发送的事件");
+      });
+
+    xtPost.on("eventFromParent", (data) => {
+      console.log("父元素发送的事件:", data);
+    });
+  </script>
 </html>

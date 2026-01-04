@@ -1,2 +1,4 @@
 node_modules
 lib/**
+.rollup.cache
+tsconfig.tsbuildinfo

@@ -1,4 +1,5 @@
 import { ImpProtocol, ProtocolMessage } from './types'
+import { logger } from '@/utils'
 
 export class Protocol implements ImpProtocol {
   version = "1.0.0"
@@ -29,7 +30,7 @@ export class Protocol implements ImpProtocol {
       return msg;
     } catch (e) {
       if (this.debug) {
-        this.log('协议解码错误', raw)
+        logger(`[protocol] [${this.id}] 协议解码错误`, raw)
       }
       return null;
     }
@@ -43,10 +44,5 @@ export class Protocol implements ImpProtocol {
     if (!msg.type || !msg.action) return false;
     if ((msg.type === 'request' || msg.type === 'response') && !msg.messageId) return false;
     return true;
-  }
-  private log(key: string, data?: ProtocolMessage): void {
-    console.group(`[protocol] [${this.id}] ${key}`)
-    console.log(data)
-    console.groupEnd()
   }
 }

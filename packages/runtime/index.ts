@@ -1,7 +1,7 @@
 import { Protocol } from "@/protocol";
 import { Transport } from "@/transport";
 import { Message } from "@/types";
-import { generateId } from "@/utils";
+import { logger, generateId } from "@/utils";
 import { ConnectionState } from './constant'
 
 type PendingItem = {
@@ -34,7 +34,15 @@ export class Runtime {
   constructor(
     private transport: Transport,
     private protocol: Protocol,
-    private timeout = 5000
+    private id: string,
+    private iframeId: string,
+    private options: {
+      timeout: number,
+      debug: boolean
+    } = {
+        timeout: 5000,
+        debug: true
+      }
   ) {
     // 统一从 transport 接收原始消息
     this.transport.onMessage(this.handleRawMessage);
@@ -53,16 +61,22 @@ export class Runtime {
       action,
       messageId,
       payload,
+      from: this.id,
+      iframeId: this.iframeId,
     };
 
     const encoded = this.protocol.encode(msg);
+
+    if (this.options.debug) {
+      logger(`[runtime]_${this.id}_call 回调`, encoded);
+    }
 
     return new Promise<R>((resolve, reject) => {
       // 超时控制，防止 pending 泄漏
       const timer = window.setTimeout(() => {
         this.pending.delete(messageId);
         reject(new Error('Request timeout'));
-      }, this.timeout);
+      }, this.options.timeout);
 
       // 注册 pending 请求
       this.pending.set(messageId, { resolve, reject, timer });
@@ -83,9 +97,15 @@ export class Runtime {
       type: 'event',
       action,
       payload,
+      from: this.id,
+      iframeId: this.iframeId,
     };
+    const data = this.protocol.encode(msg)
 
-    this.transport.send(this.protocol.encode(msg));
+    if (this.options.debug) {
+      logger(`[runtime]_${this.id}_emit 发送事件`, data);
+    }
+    this.transport.send(data);
   }
 
   /**
@@ -95,6 +115,9 @@ export class Runtime {
   on<T = any>(action: string, cb: (payload: T) => void): void {
     const list = this.listeners.get(action) || [];
     list.push(cb);
+    if (this.options.debug) {
+      logger(`[runtime]_${this.id}_on 监听事件：`, action);
+    }
     this.listeners.set(action, list);
   }
 
@@ -105,16 +128,20 @@ export class Runtime {
     action: string,
     handler: (payload: T) => R | Promise<R>
   ): void {
+    if (this.options.debug) {
+      logger(`[runtime]_${this.id}_expose 暴露方法`, action);
+    }
     this.handlers.set(action, handler);
   }
 
   private handleEvent(message: Message) {
     const { action, payload } = message;
-    this.log('__ready__ 事件触发', message)
     // 系统事件
     if (action === '__ready__') {
-
       if (this.state !== ConnectionState.READY) {
+        if (this.options.debug) {
+          logger(`[runtime]_${this.id}_ready 子窗口注册成功`);
+        }
         this.state = ConnectionState.READY;
         this.readyCallbacks.forEach(cb => cb());
         this.readyCallbacks = [];
@@ -128,10 +155,10 @@ export class Runtime {
   private handleRawMessage = (raw: string) => {
     const message = this.protocol.decode(raw);
     if (!message) return;
+    const { type, action, messageId, payload, error, iframeId, from } = message;
 
-    this.log('__ready__ 事件触发', message)
-
-    const { type, action, messageId, payload, error } = message;
+    // 当源一致时，有可能是两个iframe 可能会会互相干扰
+    if (iframeId !== this.iframeId) return
 
     /**
      * event：单向事件通知
@@ -223,11 +250,6 @@ export class Runtime {
     this.listeners.clear();
     this.transport.destroy();
     this.readyCallbacks = [];
-  }
-  private log(key: string, data?: Message): void {
-    console.group(`[runtime] ${key}`)
-    console.log(data)
-    console.groupEnd()
   }
 
   /** 注册 ready 成功回调 */

@@ -9,3 +9,8 @@ export const defaultOptions: Partial<Options> = {
   // 默认超时时间 5s
   timeout: 5000,
 }
+
+
+export enum EventName {
+  READY = '__ready__',
+}
