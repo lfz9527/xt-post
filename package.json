@@ -1,0 +1,28 @@
+{
+  "name": "xt-post",
+  "version": "1.0.0",
+  "description": "",
+  "main": "lib/cjs/xt-post.js",
+  "module": "lib/es/xt-post.js",
+  "unpkg": "lib/xt-post.min.js",
+  "types": "lib/types/index.d.ts",
+  "scripts": {
+    "preinstall": "npx only-allow pnpm",
+    "build": "rollup --config rollup.config.ts --configPlugin typescript && tsc -p tsconfig.build.json"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.14.0",
+  "devDependencies": {
+    "xt-post": "workspace:*",
+    "@rollup/plugin-commonjs": "^29.0.0",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^12.3.0",
+    "rollup": "^4.54.0",
+    "rollup-plugin-cleandir": "^3.0.0",
+    "tslib": "^2.8.1",
+    "typescript": "^5.9.3"
+  }
+}

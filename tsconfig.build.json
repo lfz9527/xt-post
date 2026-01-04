@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "emitDeclarationOnly": true, // 只生成类型文件
+    "declaration": true, // 生成 .d.ts
+    "declarationMap": true, // 可选，生成映射文件
+    "outDir": "lib/types" // 输出到 lib/types
+  },
+  "include": ["packages"]
+}

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>xt-post CDN Test</title>
+  </head>
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+  <body>
+    <h1>xt-post CDN 测试</h1>
+
+    <!-- 本地“模拟 CDN” -->
+    <script src="../lib/xt-post.min.js"></script>
+    <script>
+      const xtPost = new XtPost({
+        debug: true,
+        id: "child_1",
+      });
+    </script>
+  </body>
+</html>
