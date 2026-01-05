@@ -32,5 +32,5 @@
       "@/*": ["packages/*"]
     }
   },
-  "include": ["packages/**/*"]
+  "include": ["packages/**/*", "rollup.config.ts", "script/**/*"]
 }

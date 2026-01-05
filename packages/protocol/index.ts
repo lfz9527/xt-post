@@ -2,7 +2,7 @@ import { ImpProtocol, ProtocolMessage } from './types'
 import { logger } from '../utils'
 
 export class Protocol implements ImpProtocol {
-  version = "1.0.0"
+  version = __VERSION__;
   private static readonly SDK = 'xt-post'
 
   constructor(

@@ -2,8 +2,14 @@ import { defineConfig } from "rollup";
 import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import terser from "@rollup/plugin-terser";
+import replace from '@rollup/plugin-replace';
 import { cleandir } from "rollup-plugin-cleandir";
 import typescript from "@rollup/plugin-typescript";
+import getPackage from "./script/getPackage";
+
+const pkg = getPackage();
+
+const PACKAGE_VERSION = pkg.version;
 
 export default defineConfig({
   input: "./packages/index.ts",
@@ -21,7 +27,12 @@ export default defineConfig({
       // 若有 tsconfig 路径，需配置
       tsconfig: './tsconfig.json',
     }),
+    replace({
+      preventAssignment: true,
+      __VERSION__: JSON.stringify(PACKAGE_VERSION),
+    }),
   ],
+
 
   // ✅ 输出期配置
   output: [
