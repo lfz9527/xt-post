@@ -1,3 +1,4 @@
+import { logger } from '@/utils';
 export class Protocol {
     constructor(debug = false, id) {
         this.debug = debug;
@@ -24,7 +25,7 @@ export class Protocol {
         }
         catch (e) {
             if (this.debug) {
-                this.log('协议解码错误', raw);
+                logger(`[protocol] [${this.id}] 协议解码错误`, raw);
             }
             return null;
         }
@@ -41,11 +42,6 @@ export class Protocol {
         if ((msg.type === 'request' || msg.type === 'response') && !msg.messageId)
             return false;
         return true;
-    }
-    log(key, data) {
-        console.group(`[protocol] [${this.id}] ${key}`);
-        console.log(data);
-        console.groupEnd();
     }
 }
 Protocol.SDK = 'xt-post';

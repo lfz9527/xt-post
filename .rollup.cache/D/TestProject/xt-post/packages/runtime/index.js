@@ -1,10 +1,15 @@
-import { generateId } from "@/utils";
+import { logger, generateId } from "@/utils";
 import { ConnectionState } from './constant';
 export class Runtime {
-    constructor(transport, protocol, timeout = 5000) {
+    constructor(transport, protocol, id, iframeId, options = {
+        timeout: 5000,
+        debug: true
+    }) {
         this.transport = transport;
         this.protocol = protocol;
-        this.timeout = timeout;
+        this.id = id;
+        this.iframeId = iframeId;
+        this.options = options;
         // 连接状态
         this.state = ConnectionState.INIT;
         // ready 回调队列
@@ -19,8 +24,16 @@ export class Runtime {
             const message = this.protocol.decode(raw);
             if (!message)
                 return;
-            this.log('__ready__ 事件触发', message);
-            const { type, action, messageId, payload, error } = message;
+            const { type, action, messageId, payload, error, iframeId, from } = message;
+            // 过滤掉自己发送的消息
+            if (from === this.id)
+                return;
+            // 当源一致时，有可能是两个iframe 可能会会互相干扰
+            if (iframeId !== this.iframeId)
+                return;
+            if (this.options.debug) {
+                logger(`[runtime]_${this.id}_ 接收消息`, message);
+            }
             /**
              * event：单向事件通知
              */
@@ -72,14 +85,19 @@ export class Runtime {
             action,
             messageId,
             payload,
+            from: this.id,
+            iframeId: this.iframeId,
         };
         const encoded = this.protocol.encode(msg);
+        if (this.options.debug) {
+            logger(`[runtime]_${this.id}_call 回调`, encoded);
+        }
         return new Promise((resolve, reject) => {
             // 超时控制，防止 pending 泄漏
             const timer = window.setTimeout(() => {
                 this.pending.delete(messageId);
                 reject(new Error('Request timeout'));
-            }, this.timeout);
+            }, this.options.timeout);
             // 注册 pending 请求
             this.pending.set(messageId, { resolve, reject, timer });
             // 通过 Transport 发送
@@ -97,8 +115,14 @@ export class Runtime {
             type: 'event',
             action,
             payload,
+            from: this.id,
+            iframeId: this.iframeId,
         };
-        this.transport.send(this.protocol.encode(msg));
+        const data = this.protocol.encode(msg);
+        if (this.options.debug) {
+            logger(`[runtime]_${this.id}_emit 发送事件`, data);
+        }
+        this.transport.send(data);
     }
     /**
    * 订阅事件
@@ -107,23 +131,36 @@ export class Runtime {
     on(action, cb) {
         const list = this.listeners.get(action) || [];
         list.push(cb);
+        if (this.options.debug) {
+            logger(`[runtime]_${this.id}_on 监听事件：`, action);
+        }
         this.listeners.set(action, list);
     }
     /**
    * 暴露方法（作为被调用方）
    */
     expose(action, handler) {
+        if (this.options.debug) {
+            logger(`[runtime]_${this.id}_expose 暴露方法`, action);
+        }
         this.handlers.set(action, handler);
     }
     handleEvent(message) {
         var _a;
         const { action, payload } = message;
-        this.log('__ready__ 事件触发', message);
         // 系统事件
         if (action === '__ready__') {
             if (this.state !== ConnectionState.READY) {
+                if (this.options.debug) {
+                    logger(`[runtime]_${this.id}_注册状态`, this.state);
+                    logger(`[runtime]_${this.id}_ready 子窗口注册成功`);
+                }
                 this.state = ConnectionState.READY;
                 this.readyCallbacks.forEach(cb => cb());
+                if (this.options.debug) {
+                    logger(`[runtime]_${this.id}_注册状态`, this.state);
+                    logger(`[runtime]_${this.id}_注册成功回调readyCallbacks`, this.readyCallbacks);
+                }
                 this.readyCallbacks = [];
             }
             return;
@@ -166,15 +203,11 @@ export class Runtime {
         this.transport.destroy();
         this.readyCallbacks = [];
     }
-    log(key, data) {
-        console.group(`[runtime] ${key}`);
-        console.log(data);
-        console.groupEnd();
-    }
     /** 注册 ready 成功回调 */
     onReady(cb) {
         if (this.state === ConnectionState.READY) {
-            cb();
+            // 异步调用保证调用顺序一致，不阻塞注册逻辑
+            setTimeout(() => cb(), 0);
         }
         else {
             this.readyCallbacks.push(cb);

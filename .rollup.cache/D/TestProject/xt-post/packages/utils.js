@@ -26,10 +26,17 @@ export const createIdGenerator = ({ prefix, size = 16, alphabet = '0123456789ABC
     return () => `${prefix}${separator}${generator()}`;
 };
 export const generateId = createIdGenerator({});
-export const mergeObject = (target, source) => {
+export function mergeObject(target, source) {
     return {
         ...target,
         ...source,
     };
+}
+export const logger = (key, data) => {
+    console.group(`[xt-post] ${key}`);
+    if (data) {
+        console.log(data);
+    }
+    console.groupEnd();
 };
 //# sourceMappingURL=utils.js.map

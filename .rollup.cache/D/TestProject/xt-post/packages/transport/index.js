@@ -1,7 +1,6 @@
-import { generateId } from "@/utils";
+import { generateId, logger } from "@/utils";
 export class Transport {
-    constructor(target = window, role, origin = '*', debug = false, id = generateId()) {
-        this.role = role;
+    constructor(target = window, origin = '*', debug = false, id = generateId()) {
         this.origin = origin;
         this.debug = debug;
         this.id = id;
@@ -14,6 +13,9 @@ export class Transport {
             this.target = target;
             // 绑定一次，保证 destroy 可移除
             this.handleMessageBound = this.handleMessage.bind(this);
+            if (this.debug) {
+                logger(`[transport]_${this.id} 通信初始化`);
+            }
             window.addEventListener('message', this.handleMessageBound);
         }
         catch (error) {
@@ -23,9 +25,6 @@ export class Transport {
     }
     // 发送消息
     send(data) {
-        if (this.debug) {
-            this.log('发送消息', data);
-        }
         this.target.postMessage(data, this.origin);
     }
     // 接收消息
@@ -37,7 +36,7 @@ export class Transport {
         this.listener = null;
         window.removeEventListener('message', this.handleMessageBound);
         if (this.debug) {
-            this.log(`通信销毁`);
+            logger(`[transport]_${this.id} 通信销毁`);
         }
     }
     handleMessage(event) {
@@ -48,15 +47,10 @@ export class Transport {
             return;
         if (source !== this.target)
             return;
-        if (this.debug) {
-            this.log('接收消息', data);
+        if (typeof data === 'string' && this.debug && data.includes('xt-post')) {
+            logger(`[transport]_${this.origin}_${this.id}_handleMessage 接收消息`, event);
         }
         this.listener(data);
-    }
-    log(key, data) {
-        console.group(`[transport]_[${this.origin}]_[${this.role}] [${this.id}] ${key}`);
-        console.log(data);
-        console.groupEnd();
     }
 }
 //# sourceMappingURL=index.js.map
