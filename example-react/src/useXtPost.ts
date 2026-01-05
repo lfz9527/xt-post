@@ -1,21 +1,6 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
+import XtPost from "xt-post";
 
-type XtPostAction = {
-  // 父iframe 发送事件给子iframe
-  emit<T = any>(action: string, payload?: T): void
-  // 子iframe 监听事件
-  on<T = any>(action: string, cb: (payload: T) => void): void
-  // 销毁
-  destroy: VoidFunction
-  // 暴露方法给子iframe 调用
-  expose<T = any, R = any>(
-    action: string,
-    handler: (payload: T) => R | Promise<R>
-  ): void
-
-  // 子iframe 调用父iframe 暴露的方法
-  call<T = any, R = any>(action: string, payload?: T): Promise<R>
-}
 
 type Props = {
   // 是否自动注册
@@ -32,44 +17,78 @@ type Props = {
   id: string
   // 源目标一致时，通过iframeId 去判断
   iframeId: string
-
-  // 子iframe 准备就绪时调用
-  onReady?: (cb: () => void) => void
 }
 
-export const useXtPost = ({ onReady, ...props }: Props) => {
+type Action = {
+  // 子iframe 准备就绪时调用
+  onReady?: VoidFunction
+  // 暴露出去的方法
+  exposes?: Record<string, (...args: any[]) => void>
+  on?: Record<string, (...args: any[]) => void>
+}
+
+export const useXtPost = ({ onReady, exposes, on, ...props }: Props & Action) => {
   const iframeRef = useRef<HTMLIFrameElement>(null)
-  const xtPostRef = useRef<Partial<XtPostAction> | null>(null)
+  const xtPostRef = useRef<any>(null)
+  const [ready, setReady] = useState(false)
 
   useEffect(() => {
     // 防止重复注册
     if (xtPostRef.current) return
     if (!iframeRef.current) return
-
-    const xtPost = new window.XtPost({
-      debug: isDev(),
+    const xtPost = new XtPost({
+      debug: true,
       container: iframeRef.current,
       ...props,
-    })
+    } as any)
     xtPostRef.current = xtPost
 
-    console.log('111111', xtPost)
+    xtPost.onReady?.(() => {
+      setReady(true)
+      onReady?.()
+    })
 
-    xtPost.onReady?.(onReady)
+    // 注册 expose
+    Object.entries(exposes ?? {}).forEach(
+      ([action, handler]) => {
+        xtPost.expose(action, handler)
+      }
+    )
+
+    // on（事件监听）
+    Object.entries(on ?? {}).forEach(
+      ([action, handler]) => {
+        xtPost.on(action, handler)
+      }
+    )
 
     return () => {
       xtPost.destroy()
       xtPostRef.current = null
+      setReady(false)
     }
-  }, [props])
+  }, [])
+
+  console.log(props.id, xtPostRef.current)
+
+  const call = useCallback(
+    (action: string, payload?: any) => {
+      return xtPostRef.current?.call?.(action, payload)
+    },
+    []
+  )
+
+  const emit = useCallback(
+    (action: string, payload?: any) =>
+      xtPostRef.current!.emit?.(action, payload),
+    []
+  )
+
 
   return {
-    expose: xtPostRef.current?.expose,
-    emit: xtPostRef.current?.emit,
-    call: xtPostRef.current?.call,
-    on: xtPostRef.current?.on,
-    destroy: xtPostRef.current?.destroy,
-    xtPost: xtPostRef.current,
+    ready,
     iframeRef,
+    call,
+    emit,
   }
 }

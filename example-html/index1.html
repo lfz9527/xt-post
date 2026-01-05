@@ -19,6 +19,7 @@
     <button id="callParent">调用父方法</button>
     <button id="sendEventToParent">发送事件给父方法</button>
 
+    parentTitle:
     <p id="innerText"></p>
   </body>
 
@@ -35,18 +36,21 @@
       .getElementById("callParent")
       .addEventListener("click", async () => {
         const parentTitle = await xtPost.call("getParentTitle");
-        console.log("父标题:", parentTitle);
+        innerText.innerText = parentTitle;
       });
 
     document
       .getElementById("sendEventToParent")
       .addEventListener("click", async () => {
-        xtPost.emit("eventFromChild", "这是子元素发送的事件");
+        xtPost.emit("eventFromChild", "child-2 发送的事件");
       });
 
     xtPost.on("eventFromParent", (data) => {
-      console.log("父元素发送的事件:", data);
+      console.log("parent-2 子元素发送的事件:", data);
       innerText.innerText = JSON.stringify(data);
+    });
+    xtPost.expose("getChildren", () => {
+      return "children-2 title";
     });
   </script>
 </html>

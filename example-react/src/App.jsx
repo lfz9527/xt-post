@@ -1,61 +1,51 @@
 import { useEffect, useRef } from "react";
 import XtPost from "xt-post";
+import { useXtPost } from "./useXtPost";
 
 function App() {
-  const iframeRef = useRef(null);
-  const iframeRef1 = useRef(null);
-  const postRef = useRef(null);
-  const postRef1 = useRef(null);
-
-  useEffect(() => {
-    if (!iframeRef.current) return;
-    const xtPost = new XtPost({
-      container: iframeRef1.current,
-      targetUrl: "http://127.0.0.1:5500/example-html/index1.html",
-      id: "parent-2",
-      iframeId: "iframe-2",
-      debug: true,
-    });
-    xtPost.onReady(() => {
+  const { iframeRef, emit, call } = useXtPost({
+    targetUrl: "http://127.0.0.1:5500/example-html/index.html",
+    id: "parent-1",
+    iframeId: "iframe-1",
+    onReady: () => {
       // 子组件准备好后回调
-      console.log(222, "注册13");
-    });
-    xtPost.expose("getParentTitle", () => {
-      return "getParentTitle";
-    });
-    xtPost.on("eventFromChild", (data) => {
-      console.log("子元素发送的事件:", data);
-    });
-    postRef1.current = xtPost;
-    return () => {
-      xtPost.destroy();
-    };
-  }, []);
+      console.log("parent-1 的子组件注册成功");
+    },
+    exposes: {
+      getParentTitle: () => {
+        return "parent-1 title";
+      },
+    },
+    on: {
+      eventFromChild: (data) => {
+        console.log("parent-1 子元素发送的事件:", data);
+      },
+    },
+  });
 
-  useEffect(() => {
-    if (!iframeRef.current) return;
-    const xtPost = new XtPost({
-      container: iframeRef.current,
-      targetUrl: "http://127.0.0.1:5500/example-html/index.html",
-      id: "parent-1",
-      iframeId: "iframe-1",
-      debug: true,
-    });
-    xtPost.onReady(() => {
+  const {
+    iframeRef: iframeRef1,
+    emit: emitChild2,
+    call: callChild2,
+  } = useXtPost({
+    targetUrl: "http://127.0.0.1:5500/example-html/index1.html",
+    id: "parent-2",
+    iframeId: "iframe-2",
+    onReady: () => {
       // 子组件准备好后回调
-      console.log(222, "注册13");
-    });
-    xtPost.expose("getParentTitle", () => {
-      return "getParentTitle";
-    });
-    xtPost.on("eventFromChild", (data) => {
-      console.log("子元素发送的事件:", data);
-    });
-    postRef.current = xtPost;
-    return () => {
-      xtPost.destroy();
-    };
-  }, []);
+      console.log("parent-2 的子组件注册成功");
+    },
+    exposes: {
+      getParentTitle: () => {
+        return "parent-2  title";
+      },
+    },
+    on: {
+      eventFromChild: (data) => {
+        console.log("parent-2 子元素发送的事件:", data);
+      },
+    },
+  });
 
   return (
     <div
@@ -80,8 +70,8 @@ function App() {
         <h1>xt-post Module 测试</h1>
         <button
           onClick={async () => {
-            await postRef.current?.emit("eventFromParent", {
-              name: "张三",
+            await emit("eventFromParent", {
+              name: "parent-1",
               time: Date.now(),
             });
           }}
@@ -90,13 +80,30 @@ function App() {
         </button>
         <button
           onClick={async () => {
-            await postRef1.current?.emit("eventFromParent", {
-              name: "张三",
+            const getChildren = await call("getChildren");
+            console.log("getChildren==", getChildren);
+          }}
+        >
+          测试调用子方法getChildren
+        </button>
+        <br />
+        <button
+          onClick={async () => {
+            await emitChild2("eventFromParent", {
+              name: "parent-2",
               time: Date.now(),
             });
           }}
         >
           测试2发送事件
+        </button>
+        <button
+          onClick={async () => {
+            const getChildren = await callChild2("getChildren");
+            console.log("getChildren==", getChildren);
+          }}
+        >
+          测试调用子方法getChildren
         </button>
       </div>
     </div>

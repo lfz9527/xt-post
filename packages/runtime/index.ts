@@ -162,6 +162,11 @@ export class Runtime {
     if (!message) return;
     const { type, action, messageId, payload, error, iframeId, from } = message;
 
+    if (this.options.debug) {
+      logger(`[runtime]_${this.id}_ message`, message);
+      logger(`[runtime]_${this.id}_ this`, this);
+    }
+
     // 过滤掉自己发送的消息
     if (from === this.id) return;
 
@@ -186,6 +191,7 @@ export class Runtime {
      */
     if (type === 'response' && messageId) {
       const task = this.pending.get(messageId);
+      logger(`[runtime]_${this.id}response 匹配到 response 请求`, task);
       if (!task) return;
       clearTimeout(task.timer);
       this.pending.delete(messageId);
@@ -231,6 +237,8 @@ export class Runtime {
       action,
       messageId,
       payload,
+      from: this.id,
+      iframeId: this.iframeId,
     };
 
     this.transport.send(this.protocol.encode(msg));
@@ -251,6 +259,8 @@ export class Runtime {
       type: 'response',
       action,
       messageId,
+      from: this.id,
+      iframeId: this.iframeId,
       error: { code, message },
     };
 
