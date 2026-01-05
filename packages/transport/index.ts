@@ -1,5 +1,5 @@
 import { ITransport } from "./types";
-import { generateId, logger } from "@/utils";
+import { generateId, logger } from "../utils";
 
 
 

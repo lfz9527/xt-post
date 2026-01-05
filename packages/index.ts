@@ -5,14 +5,9 @@ import { defaultOptions, EventName } from './constant';
 import { Options } from './types';
 import { mergeObject, logger } from './utils';
 
-/**
- * XtPost
- * SDK 最外层封装（Facade）
- * - 对外暴露统一通信 API
-*/
 class XtPost {
   /** 合并后的配置 */
-  private config: Required<Options>;
+  private config!: Required<Options>;
 
   /** 通信层 */
   private transport!: Transport;
@@ -73,8 +68,6 @@ class XtPost {
       }
     );
   }
-
-  /* ===================== 对外 API ===================== */
 
   /**
    * 发起 RPC 调用

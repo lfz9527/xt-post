@@ -1,4 +1,7 @@
 packages:
-  - "example-react"
-  - "example-html"
-  - "packages"
+  - example-react
+  - example-html
+  - packages
+
+ignoredBuiltDependencies:
+  - esbuild

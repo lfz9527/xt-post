@@ -1,7 +1,7 @@
 import { Protocol } from "@/protocol";
 import { Transport } from "@/transport";
 import { Message } from "@/types";
-import { logger, generateId } from "@/utils";
+import { logger, generateId } from "../utils";
 import { ConnectionState } from './constant'
 
 type PendingItem = {

@@ -1,5 +1,5 @@
 import { ImpProtocol, ProtocolMessage } from './types'
-import { logger } from '@/utils'
+import { logger } from '../utils'
 
 export class Protocol implements ImpProtocol {
   version = "1.0.0"
