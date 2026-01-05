@@ -15,7 +15,12 @@ export default defineConfig({
       extensions: [".js", ".ts"],
     }),
     commonjs(),
-    typescript(),
+    typescript({
+      // 显式声明 sourceMap 与 Rollup 保持一致（可选，消除插件侧的模糊性）
+      sourceMap: true,
+      // 若有 tsconfig 路径，需配置
+      tsconfig: './tsconfig.json',
+    }),
   ],
 
   // ✅ 输出期配置
@@ -41,6 +46,7 @@ export default defineConfig({
       file: "lib/xt-post.umd.min.js",
       format: "umd",
       name: "XtPost",
+      sourcemap: true,
       plugins: [
         terser({
           compress: { drop_console: false },
