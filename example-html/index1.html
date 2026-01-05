@@ -11,8 +11,8 @@
       padding: 0;
     }
   </style>
-  <body>
-    <h1>xt-post CDN 测试</h1>
+  <body style="background-color: aqua">
+    <h1>xt-post CDN 测试 2222222222</h1>
 
     <!-- 本地“模拟 CDN” -->
 
@@ -27,15 +27,15 @@
     const innerText = document.getElementById("innerText");
     const xtPost = new XtPost({
       debug: true,
-      id: "children-1",
-      iframeId: "iframe-1",
+      id: "children-2",
+      iframeId: "iframe-2",
     });
 
     document
       .getElementById("callParent")
       .addEventListener("click", async () => {
         const parentTitle = await xtPost.call("getParentTitle");
-        innerText.innerText = parentTitle;
+        console.log("父标题:", parentTitle);
       });
 
     document
@@ -43,6 +43,7 @@
       .addEventListener("click", async () => {
         xtPost.emit("eventFromChild", "这是子元素发送的事件");
       });
+
     xtPost.on("eventFromParent", (data) => {
       console.log("父元素发送的事件:", data);
       innerText.innerText = JSON.stringify(data);

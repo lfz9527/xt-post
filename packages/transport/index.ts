@@ -33,9 +33,6 @@ export class Transport implements ITransport {
 
   // 发送消息
   send(data: string): void {
-    if (this.debug) {
-      logger(`[transport]_${this.id} 发送消息`, data)
-    }
     this.target.postMessage(data, this.origin);
   }
   // 接收消息
@@ -56,8 +53,8 @@ export class Transport implements ITransport {
     if (!this.listener) return
     if (this.origin !== '*' && origin !== this.origin) return;
     if (source !== this.target) return;
-    if (this.debug) {
-      logger(`[transport]_${this.id} 接收消息`, data)
+    if (typeof data === 'string' && this.debug && data.includes('xt-post')) {
+      logger(`[transport]_${this.origin}_${this.id}_handleMessage 接收消息`, event)
     }
     this.listener(data);
   }

@@ -6,4 +6,8 @@ export const defaultOptions = {
     // 默认超时时间 5s
     timeout: 5000,
 };
+export var EventName;
+(function (EventName) {
+    EventName["READY"] = "__ready__";
+})(EventName || (EventName = {}));
 //# sourceMappingURL=constant.js.map

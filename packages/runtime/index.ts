@@ -140,10 +140,15 @@ export class Runtime {
     if (action === '__ready__') {
       if (this.state !== ConnectionState.READY) {
         if (this.options.debug) {
+          logger(`[runtime]_${this.id}_注册状态`, this.state);
           logger(`[runtime]_${this.id}_ready 子窗口注册成功`);
         }
         this.state = ConnectionState.READY;
         this.readyCallbacks.forEach(cb => cb());
+        if (this.options.debug) {
+          logger(`[runtime]_${this.id}_注册状态`, this.state);
+          logger(`[runtime]_${this.id}_注册成功回调readyCallbacks`, this.readyCallbacks);
+        }
         this.readyCallbacks = [];
       }
       return;
@@ -157,8 +162,16 @@ export class Runtime {
     if (!message) return;
     const { type, action, messageId, payload, error, iframeId, from } = message;
 
+    // 过滤掉自己发送的消息
+    if (from === this.id) return;
+
     // 当源一致时，有可能是两个iframe 可能会会互相干扰
     if (iframeId !== this.iframeId) return
+
+    if (this.options.debug) {
+      logger(`[runtime]_${this.id}_ 接收消息`, message);
+    }
+
 
     /**
      * event：单向事件通知
@@ -255,7 +268,8 @@ export class Runtime {
   /** 注册 ready 成功回调 */
   onReady(cb: () => void) {
     if (this.state === ConnectionState.READY) {
-      cb();
+      // 异步调用保证调用顺序一致，不阻塞注册逻辑
+      setTimeout(() => cb(), 0);
     } else {
       this.readyCallbacks.push(cb);
     }

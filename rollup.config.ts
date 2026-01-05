@@ -22,7 +22,7 @@ export default defineConfig({
   // ✅ 输出期配置
   output: [
     {
-      file: './lib/es/xt-post.js',
+      file: 'lib/es/xt-post.js',
       format: 'es',
       sourcemap: true,
       plugins: [
@@ -33,9 +33,14 @@ export default defineConfig({
       ]
     },
     {
-      file: './lib/xt-post.min.js',
-      format: 'iife',
+      file: 'lib/xt-post.umd.js',
+      format: 'umd',
+      name: 'XtPost',
       sourcemap: true,
+    },
+    {
+      file: 'lib/xt-post.umd.min.js',
+      format: 'umd',
       name: 'XtPost',
       plugins: [
         terser({
@@ -45,7 +50,7 @@ export default defineConfig({
       ]
     },
     {
-      file: './lib/cjs/xt-post.min.js',
+      file: 'lib/cjs/xt-post.min.js',
       format: 'cjs',
       sourcemap: true,
       plugins: [

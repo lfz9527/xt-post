@@ -51,7 +51,7 @@ export function mergeObject<T>(target: T, source: any): T {
 
 
 export const logger = (key: string, data?: any) => {
-  console.group(`${key}`)
+  console.group(`[xt-post] ${key}`)
   if (data) {
     console.log(data)
   }
